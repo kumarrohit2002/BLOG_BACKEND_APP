@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  posts     Post[]
+  comments  Comment[]
+  reposts   Repost[]  // User's reposts
+}
+
+model Post {
+  id          Int        @id @default(autoincrement())
+  img         String?
+  description String
+  likes       Int        @default(0)
+  reposts     Int        @default(0)
+  author      User       @relation(fields: [userId], references: [id])
+  userId      Int
+  comments    Comment[]
+  repostedBy  Repost[]   // Reposts of this post
+  createdAt   DateTime   @default(now())
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    Int
+  author    User     @relation(fields: [userId], references: [id])
+  userId    Int
+  createdAt DateTime @default(now())
+}
+
+model Repost {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId]) //  Prevents duplicate reposts
+}
